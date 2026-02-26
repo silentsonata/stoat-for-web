@@ -59,7 +59,23 @@ export function CategoryButton(props: Props) {
       isLink={!!props.onClick}
       disabled={props.disabled}
       aria-disabled={props.disabled}
-      onClick={props.disabled ? undefined : props.onClick}
+      onClick={(e: Event) => {
+        // Prevent clicks when button is disabled
+        if (props.disabled) return;
+
+        /**
+         * Only trigger onClick when clicking the button OR an input element such
+         * as a checkbox. This prevents multiple triggers of the onClick funciton
+         * due to multiple nested elements calling the onClick.
+         */
+        if (
+          e.target instanceof HTMLDivElement ||
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLAnchorElement
+        ) {
+          props.onClick?.();
+        }
+      }}
     >
       <Ripple />
 
