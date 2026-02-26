@@ -63,16 +63,31 @@ export function CategoryButton(props: Props) {
         // Prevent clicks when button is disabled
         if (props.disabled) return;
 
+        // Capture parent element and then capture the last child in the parent
+        const currentTargetElement = e.currentTarget as HTMLElement;
+        const lastChild = currentTargetElement.lastChild as HTMLElement;
+
         /**
-         * Only trigger onClick when clicking the button OR an input element such
-         * as a checkbox. This prevents multiple triggers of the onClick funciton
-         * due to multiple nested elements calling the onClick.
+         * Check to see if the mdui-checkbox is inside the parent. If the element
+         * exists, then run the logic to make sure it does not double trigger the onClick
+         * function. Otherwise just run the onClick as usual.
          */
-        if (
-          e.target instanceof HTMLDivElement ||
-          e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLAnchorElement
-        ) {
+        if (lastChild.tagName === "MDUI-CHECKBOX") {
+          if (
+            /**
+             * Only trigger onClick when clicking the button OR an input element such
+             * as a checkbox. This prevents multiple triggers of the onClick funciton
+             * due to mdui-checkbox calling two onClicks.
+             */
+            e.target instanceof HTMLDivElement ||
+            e.target instanceof HTMLInputElement ||
+            e.target instanceof HTMLAnchorElement
+          ) {
+            // Trigger when mdui-checkbox exists
+            props.onClick?.();
+          }
+        } else {
+          // Trigger for anything else
           props.onClick?.();
         }
       }}
