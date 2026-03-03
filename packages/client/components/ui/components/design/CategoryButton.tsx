@@ -64,32 +64,27 @@ export function CategoryButton(props: Props) {
         if (props.disabled) return;
 
         // Capture parent element and then capture the last child in the parent
-        const currentTargetElement = e.currentTarget as HTMLElement;
-        const lastChild = currentTargetElement.lastChild as HTMLElement;
+        const currentTargetElement = e.currentTarget as HTMLElement; // Base element
+        const lastChild = currentTargetElement.lastChild as HTMLElement; // Action Element
+        const targetElement = e.target as HTMLElement; // Clicked Element
 
         /**
-         * Check to see if the mdui-checkbox is inside the parent. If the element
-         * exists, then run the logic to make sure it does not double trigger the onClick
-         * function. Otherwise just run the onClick as usual.
+         * Checks if mdui-checkbox is in the action of the button and fixes the double trigger
+         * issue when pressing the checkbox.
          */
         if (lastChild.tagName === "MDUI-CHECKBOX") {
-          if (
-            /**
-             * Only trigger onClick when clicking the button OR an input element such
-             * as a checkbox. This prevents multiple triggers of the onClick funciton
-             * due to mdui-checkbox calling two onClicks.
-             */
-            e.target instanceof HTMLDivElement ||
-            e.target instanceof HTMLInputElement ||
-            e.target instanceof HTMLAnchorElement
-          ) {
-            // Trigger when mdui-checkbox exists
+          if (targetElement instanceof HTMLInputElement) {
+            // When the target is the checkbox input, prevent the default action from executing
+            e.preventDefault();
+          } else {
+            // If target is not the checkbox input, proceed with onClick
             props.onClick?.();
           }
-        } else {
-          // Trigger for anything else
-          props.onClick?.();
+          return;
         }
+
+        // Trigger for anything else
+        props.onClick?.();
       }}
     >
       <Ripple />
