@@ -2,15 +2,46 @@ import { State } from "..";
 
 import { AbstractStore } from ".";
 
+/**
+ * Possible noise suppresion states. Browser is browser noise suppresion and enhanced is machine learning suppression via RNNoise.
+ */
+export type NoiseSuppresionState = "disabled" | "browser" | "enhanced";
+
+const NoiseSuppresionStates: NoiseSuppresionState[] = [
+  "disabled",
+  "browser",
+  "enhanced",
+];
+
+/**
+ * Possible screen share qualities. Low is 720p@30fps, high 1080p@30fps and text is source@5fps.
+ */
+export type ScreenShareQualityName = "low" | "high" | "text";
+
+/**
+ * Array of available screen share quality names.
+ */
+export const ScreenShareQualityNames: ScreenShareQualityName[] = [
+  "low",
+  "high",
+  "text",
+];
+
 export interface TypeVoice {
   preferredAudioInputDevice?: string;
   preferredAudioOutputDevice?: string;
 
   echoCancellation: boolean;
-  noiseSupression: boolean;
+  noiseSupression: NoiseSuppresionState;
+  autoGainControl: boolean;
+
+  screenShareQuality: ScreenShareQualityName;
+  screenShareQualityAsk: boolean;
 
   inputVolume: number;
   outputVolume: number;
+  deafen: boolean;
+  micOn: boolean;
 
   userVolumes: Record<string, number>;
   userMutes: Record<string, boolean>;
@@ -41,9 +72,14 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
   default(): TypeVoice {
     return {
       echoCancellation: true,
-      noiseSupression: true,
+      noiseSupression: "browser",
+      autoGainControl: true,
+      screenShareQuality: "low",
+      screenShareQualityAsk: true,
       inputVolume: 1.0,
       outputVolume: 1.0,
+      deafen: false,
+      micOn: true,
       userVolumes: {},
       userMutes: {},
     };
@@ -67,8 +103,31 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
       data.echoCancellation = input.echoCancellation;
     }
 
-    if (typeof input.noiseSupression === "boolean") {
+    // migrate legacy noise suppression to new suppression state
+    if ((input.noiseSupression as unknown) === "true") {
+      data.noiseSupression = "browser";
+    } else if ((input.noiseSupression as unknown) === "false") {
+      data.noiseSupression = "disabled";
+    } else if (
+      input.noiseSupression &&
+      NoiseSuppresionStates.includes(input.noiseSupression)
+    ) {
       data.noiseSupression = input.noiseSupression;
+    }
+
+    if (typeof input.autoGainControl === "boolean") {
+      data.autoGainControl = input.autoGainControl;
+    }
+
+    if (
+      input.screenShareQuality &&
+      ScreenShareQualityNames.includes(input.screenShareQuality)
+    ) {
+      data.screenShareQuality = input.screenShareQuality;
+    }
+
+    if (typeof input.screenShareQualityAsk === "boolean") {
+      data.screenShareQualityAsk = input.screenShareQualityAsk;
     }
 
     if (typeof input.inputVolume === "number") {
@@ -77,6 +136,14 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
 
     if (typeof input.outputVolume === "number") {
       data.outputVolume = input.outputVolume;
+    }
+
+    if (typeof input.deafen === "boolean") {
+      data.deafen = input.deafen;
+    }
+
+    if (typeof input.micOn === "boolean") {
+      data.micOn = input.micOn;
     }
 
     if (typeof input.userVolumes === "object") {
@@ -159,8 +226,29 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
   /**
    * Set noise cancellation
    */
-  set noiseSupression(value: boolean) {
+  set noiseSupression(value: NoiseSuppresionState) {
     this.set("noiseSupression", value);
+  }
+
+  /**
+   * Set auto gain control
+   */
+  set autoGainControl(value: boolean) {
+    this.set("autoGainControl", value);
+  }
+
+  /**
+   * Set screen share quality
+   */
+  set screenShareQuality(value: ScreenShareQualityName) {
+    this.set("screenShareQuality", value);
+  }
+
+  /**
+   * Set screen share quality always ask
+   */
+  set screenShareQualityAsk(value: boolean) {
+    this.set("screenShareQualityAsk", value);
   }
 
   /**
@@ -175,6 +263,20 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
    */
   set outputVolume(value: number) {
     this.set("outputVolume", value);
+  }
+
+  /**
+   * Set mic status
+   */
+  set micOn(value: boolean) {
+    this.set("micOn", value);
+  }
+
+  /**
+   * Set defean status
+   */
+  set deafen(value: boolean) {
+    this.set("deafen", value);
   }
 
   /**
@@ -201,8 +303,29 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
   /**
    * Get noise supression
    */
-  get noiseSupression(): boolean | undefined {
+  get noiseSupression(): NoiseSuppresionState | undefined {
     return this.get().noiseSupression;
+  }
+
+  /**
+   * Get auto gain control
+   */
+  get autoGainControl(): boolean | undefined {
+    return this.get().autoGainControl;
+  }
+
+  /**
+   * Get screen share quality
+   */
+  get screenShareQuality(): ScreenShareQualityName | undefined {
+    return this.get().screenShareQuality;
+  }
+
+  /**
+   * Get screen share quality always ask
+   */
+  get screenShareQualityAsk(): boolean {
+    return this.get().screenShareQualityAsk;
   }
 
   /**
@@ -213,9 +336,23 @@ export class Voice extends AbstractStore<"voice", TypeVoice> {
   }
 
   /**
-   * Get noise supression
+   * Get output volume
    */
   get outputVolume(): number {
     return this.get().outputVolume;
+  }
+
+  /**
+   * Get deafen status
+   */
+  get deafen(): boolean {
+    return this.get().deafen;
+  }
+
+  /**
+   * Get mic status
+   */
+  get micOn(): boolean {
+    return this.get().micOn;
   }
 }
