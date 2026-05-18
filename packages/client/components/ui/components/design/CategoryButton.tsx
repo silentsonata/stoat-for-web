@@ -62,30 +62,11 @@ export function CategoryButton(props: Props) {
       disabled={props.disabled}
       aria-disabled={props.disabled}
       onClick={(e: Event) => {
-        // Prevent clicks when button is disabled
+        // Disable action when button is disabled
         if (props.disabled) return;
 
-        // Capture parent element and then capture the last child in the parent
-        const currentTargetElement = e.currentTarget as HTMLElement; // Base element
-        const lastChild = currentTargetElement.lastChild as HTMLElement; // Action Element
-        const targetElement = e.target as HTMLElement; // Clicked Element
-
-        /**
-         * Checks if mdui-checkbox is in the action of the button and fixes the double trigger
-         * issue when pressing the checkbox.
-         */
-        if (lastChild.tagName === "MDUI-CHECKBOX") {
-          if (targetElement instanceof HTMLInputElement) {
-            // When the target is the checkbox input, prevent the default action from executing
-            e.preventDefault();
-          } else {
-            // If target is not the checkbox input, proceed with onClick
-            props.onClick?.();
-          }
-          return;
-        }
-
-        // Trigger for anything else
+        // Prevent propagation when action is called
+        e.preventDefault();
         props.onClick?.();
       }}
     >
