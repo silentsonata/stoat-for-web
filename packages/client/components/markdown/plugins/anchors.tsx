@@ -53,7 +53,9 @@ function inAppScope(link: URL): boolean {
       "https://app.revolt.chat",
       "https://stoat.chat",
     ].includes(link.origin) &&
-    /\/(app|home|pwa|dev|invite|bot|friends|server)\/?/.test(link.pathname)
+    /\/(app|home|pwa|dev|invite|bot|friends|server|channel)\/?/.test(
+      link.pathname,
+    )
   );
 }
 
@@ -72,9 +74,18 @@ export function RenderAnchor(
   // Handle case where there is no link
   if (!localProps.href) return <span>{remoteProps.children}</span>;
 
-  // Handle links that navigate internally
   try {
     let url = new URL(localProps.href);
+
+    // Only allow http, https, mailto, and tel protocols
+    if (
+      url.protocol !== "http:" &&
+      url.protocol !== "https:" &&
+      url.protocol !== "mailto:" &&
+      url.protocol !== "tel:"
+    ) {
+      return <span>{remoteProps.children}</span>;
+    }
 
     // Remap discover links to native links
     if (url.origin === "https://rvlt.gg" || url.origin === "https://stt.gg") {
